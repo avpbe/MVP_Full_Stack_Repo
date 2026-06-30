@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Unificado de Engenharia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .gantt-chart { position: relative; border-left: 2px solid #eee; min-height: 100px; }
+        .gantt-row { border-bottom: 1px solid #f0f0f0; height: 50px; position: relative; }
+        .gantt-bar { position: absolute; height: 30px; top: 50%; transform: translateY(-50%); background-color: #0d6efd; border-radius: 5px; color: white; font-size: 0.8em; padding: 0 8px; line-height: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+
+<body>
+    <!-- Cabeçalho -->
+    <header class="header bg-dark text-white text-center py-3 mb-4">
+        <h1>Dashboard Unificado de Engenharia</h1>
+    </header>
+
+    <main class="container">
+
+        <!-- Controles do Dashboard -->
+        <section class="card custom-card mb-4">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                <div class="flex-grow-1 me-3 mb-2 mb-md-0">
+                    <label for="mainEngineerSelect" class="form-label">Filtrar por Engenheiro:</label>
+                    <select class="form-select" id="mainEngineerSelect">
+                        <option value="all" selected>Todos os Engenheiros</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRequestModal">Nova Requisição</button>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newEngineerModal">Novo Engenheiro</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conteúdo do Dashboard -->
+        <div class="row">
+            <!-- Coluna de Projetos -->
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <section class="card custom-card h-100">
+                    <div class="card-header"><h5 id="projects-title" class="mb-0">Todos os Projetos</h5></div>
+                    <div class="card-body">
+                        <div id="requests-list" class="row">
+                            <!-- Cards de projetos serão inseridos aqui -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Coluna da Direita (Cronograma e Engenheiros) -->
+            <div class="col-lg-6">
+                <!-- Seção do Cronograma -->
+                <section class="card custom-card mb-4">
+                    <div class="card-header"><h5 id="gantt-title" class="mb-0">Cronograma Geral</h5></div>
+                    <div class="card-body">
+                        <div id="gantt-timeline-header" class="d-flex justify-content-between text-muted small mb-2"></div>
+                        <div id="gantt-chart" class="gantt-chart"></div>
+                    </div>
+                </section>
+
+                <!-- Seção da Lista de Engenheiros -->
+                <section class="card custom-card">
+                    <div class="card-header"><h5 class="mb-0">Equipe Cadastrada</h5></div>
+                    <div id="engineers-list" class="list-group list-group-flush">
+                        <!-- Lista de engenheiros será inserida aqui -->
+                    </div>
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Nova Requisição -->
+    <div class="modal fade" id="newRequestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Nova Requisição</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-request-form">
+                        <input type="text" class="form-control mb-3" id="projectName" placeholder="Nome do Projeto" required>
+                        <input type="text" class="form-control mb-3" id="discipline" placeholder="Disciplina" required>
+                        <textarea class="form-control mb-3" id="description" rows="2" placeholder="Descrição"></textarea>
+                        <select class="form-select mb-3" id="projectEngineer" required>
+                            <option value="" selected disabled>Atribuir a um engenheiro...</option>
+                        </select>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><label for="startDate" class="form-label">Data de Início</label><input type="date" class="form-control" id="startDate" required></div>
+                            <div class="col-md-6 mb-3"><label for="endDate" class="form-label">Data de Fim</label><input type="date" class="form-control" id="endDate" required></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Salvar Requisição</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Novo Engenheiro -->
+    <div class="modal fade" id="newEngineerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cadastrar Novo Engenheiro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="new-engineer-form">
+                        <input type="text" class="form-control mb-3" id="engineerName" placeholder="Nome Completo" required>
+                        <div class="row">
+                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerRole" placeholder="Cargo" required></div>
+                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerDiscipline" placeholder="Disciplina" required></div>
+                        </div>
+                        <select class="form-select mb-3" id="engineerPlatformRole" required>
+                            <option value="" selected disabled>Selecione a atribuição...</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Checker">Checker</option>
+                            <option value="Executer">Executer</option>
+                        </select>
+                        <button type="submit" class="btn btn-success w-100">Salvar Engenheiro</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/scripts_no_api7.js"></script>
+</body>
+
+</html>

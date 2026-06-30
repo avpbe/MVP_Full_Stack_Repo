@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requisições de Engenharia - Layout Modificado</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+  
+<body>
+    <!-- Cabeçalho -->
+    <header class="header bg-dark text-white text-center py-3 mb-4">
+        <h1>Sistema de Requisições de Engenharia Subsea</h1>
+    </header>
+  
+    <!-- Container Principal -->
+    <main class="container">
+        <!-- Linha do Grid para centralizar o conteúdo -->
+        <div class="row justify-content-center">
+            <!-- Coluna que define a largura do conteúdo -->
+            <div class="col-lg-10 col-xl-8">
+
+                <!-- Seção para Adicionar Nova Requisição -->
+                <section class="card mb-4 custom-card">
+                    <div class="card-header">
+                        <h2>Nova Requisição</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="new-request-form">
+                            <div class="mb-3">
+                                <label for="projectName" class="form-label">Nome do Projeto</label>
+                                <input type="text" class="form-control" id="projectName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="discipline" class="form-label">Disciplina</label>
+                                <input type="text" class="form-control" id="discipline" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Descrição</label>
+                                <textarea class="form-control" id="description" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Adicionar Requisição</button>
+                        </form>
+                    </div>
+                </section>
+          
+                <!-- Seção para Listar Requisições -->
+                <section class="card custom-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h2>Requisições Cadastradas</h2>
+                        <div class="input-group w-50">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nome do projeto...">
+                            <button class="btn btn-secondary" type="button" onclick="searchRequest()">Buscar</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="requests-list" class="row">
+                            <!-- Cards de requisição serão inseridos aqui via JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+  
+    <!-- Scripts -->
+    <script src="js/scripts_no_api.js"></script>
+</body>
+  
+</html>
