@@ -22,6 +22,13 @@ const showView = (viewId, headerTitle) => {
     if (viewId === 'engineers-view') {
         getColaboradores();
     }
+    if (viewId === 'schedule-view') {
+        populateGanttFilter();
+        renderGanttChart('all'); // Renderiza o gráfico com todos os engenheiros inicialmente
+        // Limpa o gráfico anterior e o título ao entrar na view
+        document.getElementById('gantt-chart').innerHTML = '';
+        document.getElementById('gantt-title').textContent = 'Cronograma';
+    }
 };
 
 
@@ -235,6 +242,174 @@ const handleProjectSubmit = async (event) => {
     }
 };
 
+/*
+  ======================================================================================
+  Funções para a tela de CRONOGRAMA (GANTT CHART)
+  ======================================================================================
+*/
+
+/**
+ * Popula o dropdown de filtro de engenheiros na tela de cronograma.
+ */
+const populateGanttFilter = async () => {
+    try {
+        const response = await fetch(`${API_URL}/colaboradores`);
+        if (!response.ok) throw new Error("Não foi possível carregar os colaboradores.");
+        
+        const { colaboradores } = await response.json();
+        const select = document.getElementById('ganttEngineerSelect');
+        if (!select) return;
+
+        select.innerHTML = '<option value="all" selected>Todos os Engenheiros</option>'; // Opção padrão
+        select.innerHTML += '<option value="">--------------------</option>'; // Separador
+        colaboradores.forEach(colab => {
+            const option = new Option(`${colab.nome} (${colab.disciplina})`, colab.id);
+            select.add(option);
+        });
+    } catch (error) {
+        console.error('Erro ao popular filtro do Gantt:', error);
+    }
+};
+
+/**
+ * Gera uma cor consistente baseada no ID do engenheiro.
+ * @param {number} id - O ID do engenheiro.
+ * @returns {string} Uma cor HSL.
+ */
+const getColorForId = (id) => {
+    const colors = [
+        'hsl(210, 70%, 55%)', // Azul
+        'hsl(160, 60%, 45%)', // Verde
+        'hsl(30, 90%, 50%)',  // Laranja
+        'hsl(340, 80%, 60%)', // Rosa
+        'hsl(260, 60%, 65%)', // Roxo
+    ];
+    return colors[id % colors.length];
+};
+
+/**
+ * Renderiza o gráfico de Gantt para os projetos de um engenheiro específico.
+ * @param {number} engineerId - O ID do engenheiro selecionado.
+ */
+const renderGanttChart = async (engineerId) => {
+    const chartContainer = document.getElementById('gantt-chart');
+    const timelineHeader = document.getElementById('gantt-timeline-header');
+    const ganttTitle = document.getElementById('gantt-title');
+    if (!chartContainer || !timelineHeader || !ganttTitle) return;
+
+    // Limpa o conteúdo anterior
+    chartContainer.innerHTML = '';
+    timelineHeader.innerHTML = '';
+
+    try {
+        // 1. Busca todos os projetos
+        const response = await fetch(`${API_URL}/projetos`);
+        if (!response.ok) throw new Error("Não foi possível carregar os projetos.");
+        const { projetos } = await response.json();
+
+        // Filtra os projetos com base na seleção
+        let projectsToDisplay;
+        if (engineerId === 'all') {
+            projectsToDisplay = projetos.filter(p => p.colaborador); // Todos os projetos que têm um colaborador
+            ganttTitle.textContent = 'Cronograma Geral';
+        } else if (engineerId) {
+            projectsToDisplay = projetos.filter(p => p.colaborador && p.colaborador.id == engineerId);
+            const selectedEngineer = projectsToDisplay.length > 0 ? projectsToDisplay[0].colaborador.nome : 'Engenheiro';
+            ganttTitle.textContent = `Cronograma de ${selectedEngineer}`;
+        } else {
+            ganttTitle.textContent = 'Cronograma';
+            return; // Se a seleção for vazia (separador), não faz nada
+        }
+
+        if (projectsToDisplay.length === 0) {
+            chartContainer.innerHTML = '<p class="text-muted">Nenhum projeto encontrado para esta seleção.</p>';
+            return;
+        }
+
+        // Ordena os projetos por data de início para um melhor agrupamento visual
+        if (engineerId === 'all') {
+            projectsToDisplay.sort((a, b) => {
+                if (a.colaborador.nome < b.colaborador.nome) return -1;
+                if (a.colaborador.nome > b.colaborador.nome) return 1;
+                return new Date(a.data_inicio) - new Date(b.data_inicio);
+            });
+        } else {
+            projectsToDisplay.sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+        }
+
+        // 2. Determina o intervalo de tempo do gráfico
+        const dates = projectsToDisplay.flatMap(p => [new Date(p.data_inicio), new Date(p.data_fim)]);
+        const minDate = new Date(Math.min.apply(null, dates));
+        const maxDate = new Date(Math.max.apply(null, dates));
+        minDate.setDate(1); // Começa no primeiro dia do primeiro mês
+        maxDate.setMonth(maxDate.getMonth() + 1); maxDate.setDate(0); // Termina no último dia do último mês
+
+        const totalDays = (maxDate - minDate) / (1000 * 60 * 60 * 24);
+
+        // 3. Renderiza o cabeçalho da linha do tempo (meses) e as linhas guia
+        let currentMonth = new Date(minDate);
+        let accumulatedWidth = 0;
+        while (currentMonth <= maxDate) {
+            const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+            const monthWidth = (daysInMonth / totalDays) * 100;
+
+            // Cabeçalho do mês
+            const monthEl = document.createElement('div');
+            monthEl.textContent = currentMonth.toLocaleString('default', { month: 'short' });
+            monthEl.style.width = `${monthWidth}%`;
+            timelineHeader.appendChild(monthEl);
+
+            // Linha guia vertical (exceto a primeira)
+            if (accumulatedWidth > 0) {
+                const line = document.createElement('div');
+                line.className = 'gantt-month-line';
+                line.style.left = `${accumulatedWidth}%`;
+                chartContainer.appendChild(line);
+            }
+            accumulatedWidth += monthWidth;
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+        }
+
+        // 4. Renderiza as barras de projeto
+        projectsToDisplay.forEach((project, index) => {
+            const startDate = new Date(project.data_inicio);
+            const endDate = new Date(project.data_fim);
+
+            const offsetDays = (startDate - minDate) / (1000 * 60 * 60 * 24);
+            const durationDays = Math.max(1, (endDate - startDate) / (1000 * 60 * 60 * 24)); // Mínimo de 1 dia
+
+            const left = (offsetDays / totalDays) * 100;
+            const width = (durationDays / totalDays) * 100;
+
+            // Cria a linha de fundo para cada projeto
+            const row = document.createElement('div');
+            row.className = 'gantt-row';
+
+            // Cria a barra do projeto
+            const bar = document.createElement('div');
+            bar.className = 'gantt-bar';
+            
+            // Conteúdo da barra
+            if (engineerId === 'all') {
+                bar.innerHTML = `<span class="gantt-bar-engineer">${project.colaborador.nome.split(' ')[0]}</span><span class="gantt-bar-project">${project.nome_projeto}</span>`;
+            } else {
+                bar.innerHTML = `<span class="gantt-bar-project">${project.nome_projeto}</span>`;
+            }
+
+            bar.title = `${project.nome_projeto} (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
+            bar.style.left = `${left}%`;
+            bar.style.width = `${width}%`;
+            bar.style.backgroundColor = getColorForId(project.colaborador.id);
+            
+            row.appendChild(bar);
+            chartContainer.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error('Erro ao renderizar o gráfico de Gantt:', error);
+        chartContainer.innerHTML = '<p class="text-danger">Ocorreu um erro ao gerar o cronograma.</p>';
+    }
+};
 
 /*
   ======================================================================================
@@ -435,5 +610,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 searchProjetos(e.target.value);
             }, 300);
         });
+    }
+
+    // Adiciona listener para o filtro de engenheiro do Gantt
+    const ganttSelect = document.getElementById('ganttEngineerSelect');
+    if (ganttSelect) {
+        ganttSelect.addEventListener('change', (e) => renderGanttChart(e.target.value));
     }
 });

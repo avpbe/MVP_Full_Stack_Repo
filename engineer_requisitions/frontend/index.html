@@ -10,10 +10,23 @@
     <style>
         .dashboard-card { cursor: pointer; }
         .view { display: none; }
+ 
         /* Estilos para o Gantt Chart */
-        .gantt-chart { position: relative; border-left: 2px solid #eee; }
-        .gantt-row { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
-        .gantt-bar { position: absolute; height: 30px; top: 50%; transform: translateY(-50%); background-color: #0d6efd; border-radius: 5px; color: white; font-size: 0.8em; padding: 0 8px; line-height: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #gantt-timeline-header { border-bottom: 1px solid #dee2e6; }
+        #gantt-timeline-header > div { text-align: center; border-right: 1px solid #dee2e6; }
+        #gantt-timeline-header > div:last-child { border-right: none; }
+        
+        .gantt-chart { position: relative; }
+        .gantt-month-line { position: absolute; top: 0; bottom: 0; width: 1px; background-color: #e9ecef; z-index: 1; }
+        
+        .gantt-row { position: relative; height: 50px; box-sizing: border-box; }
+        .gantt-row:nth-child(odd) { background-color: #f8f9fa; }
+        .gantt-row:not(:last-child) { border-bottom: 1px solid #e9ecef; }
+ 
+        .gantt-bar { position: absolute; top: 10px; height: 30px; background-color: #0d6efd; border-radius: 5px; color: white; font-size: 0.8em; padding: 0 10px; z-index: 2; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: background-color 0.3s; }
+        .gantt-bar:hover { filter: brightness(1.1); }
+        .gantt-bar-engineer { font-weight: bold; font-size: 0.9em; }
+        .gantt-bar-project { opacity: 0.9; }
     </style>
 </head>
 
