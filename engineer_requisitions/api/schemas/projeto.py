@@ -2,13 +2,14 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from models import StatusProjeto
-from schemas import ColaboradorViewSchema
+from schemas.colaborador import ColaboradorViewSchema
 
 class ProjetoSchema(BaseModel):
     """ Define como um novo projeto a ser inserido deve ser representado """
     nome_projeto: str = "Projeto Alfa"
     disciplina: str = "Instalação"
     descricao: str = "Análise de dutos flexíveis"
+    status: StatusProjeto = StatusProjeto.ABERTO
     data_inicio: datetime
     data_fim: datetime
     colaborador_id: Optional[int] = None
@@ -23,7 +24,7 @@ class ProjetoViewSchema(BaseModel):
     nome_projeto: str = "Projeto Alfa"
     disciplina: str = "Instalação"
     descricao: str = "Análise de dutos flexíveis"
-    status: StatusProjeto = StatusProjeto.ABERTA
+    status: StatusProjeto = StatusProjeto.ABERTO
     data_inicio: datetime
     data_fim: datetime
     colaborador: Optional[ColaboradorViewSchema] = None
@@ -34,6 +35,7 @@ class ListagemProjetosSchema(BaseModel):
 
 def apresenta_projetos(projetos: List[any]):
     """ Retorna uma representação do projeto seguindo o schema definido. """
+    """ Retorna uma representação do projeto seguindo o schema definido em ProjetoViewSchema. """
     result = []
     for proj in projetos:
         result.append({
@@ -46,4 +48,6 @@ def apresenta_projetos(projetos: List[any]):
             "data_fim": proj.data_fim,
             "colaborador": proj.colaborador,
         })
+        # Utiliza o ProjetoViewSchema para serializar o objeto Projeto do SQLAlchemy
+        result.append(ProjetoViewSchema.model_validate(proj))
     return {"projetos": result}

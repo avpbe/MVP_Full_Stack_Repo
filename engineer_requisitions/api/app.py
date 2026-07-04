@@ -4,10 +4,10 @@ from urllib.parse import unquote
  
 from sqlalchemy.exc import IntegrityError
  
-from models import Session, Projeto, Colaborador, Base, engine
+from models import Session, Projeto, Colaborador, Base, engine, StatusProjeto
 from schemas import (
     ProjetoSchema, ProjetoBuscaSchema, ProjetoViewSchema, ListagemProjetosSchema, apresenta_projetos,
-    ColaboradorSchema, ColaboradorBuscaSchema, ListagemColaboradoresSchema, apresenta_colaboradores,
+    ColaboradorSchema, ColaboradorBuscaSchema, ColaboradorDelSchema, ListagemColaboradoresSchema, apresenta_colaboradores,
     ErrorSchema
 )
 from flask_cors import CORS
@@ -30,25 +30,26 @@ def home():
 # Rota para adicionar um novo projeto
 @app.post('/projeto', tags=[projeto_tag],
           responses={"200": ProjetoViewSchema, "409": ErrorSchema, "400": ErrorSchema})
-def add_projeto(json: ProjetoSchema):
+def add_projeto(body: ProjetoSchema):
     """Adiciona um novo Projeto à base de dados
  
     Retorna uma representação do projeto inserido.
     """
     session = Session()
     colaborador = None
-    if json.colaborador_id:
-        colaborador = session.query(Colaborador).filter(Colaborador.id == json.colaborador_id).first()
+    if body.colaborador_id:
+        colaborador = session.query(Colaborador).filter(Colaborador.id == body.colaborador_id).first()
         if not colaborador:
             return {"message": "Colaborador não encontrado."}, 404
 
     projeto = Projeto(
-        nome_projeto=json.nome_projeto,
-        disciplina=json.disciplina,
-        descricao=json.descricao,
-        data_inicio=json.data_inicio,
-        data_fim=json.data_fim,
-        colaborador_id=json.colaborador_id
+        nome_projeto=body.nome_projeto,
+        disciplina=body.disciplina,
+        descricao=body.descricao,
+        status=body.status,
+        data_inicio=body.data_inicio,
+        data_fim=body.data_fim,
+        colaborador_id=body.colaborador_id
     )
  
     try:
@@ -107,14 +108,14 @@ def del_projeto(query: ProjetoBuscaSchema):
 
 @app.post('/colaborador', tags=[colaborador_tag],
           responses={"200": ColaboradorSchema, "409": ErrorSchema, "400": ErrorSchema})
-def add_colaborador(json: ColaboradorSchema):
+def add_colaborador(body: ColaboradorSchema):
     """Adiciona um novo Colaborador à base de dados
     """
     colaborador = Colaborador(
-        nome=json.nome,
-        cargo=json.cargo,
-        disciplina=json.disciplina,
-        atribuicao=json.atribuicao
+        nome=body.nome,
+        cargo=body.cargo,
+        disciplina=body.disciplina,
+        atribuicao=body.atribuicao
     )
 
     try:
@@ -150,7 +151,7 @@ def get_colaboradores():
         return apresenta_colaboradores(colaboradores), 200
 
 @app.delete('/colaborador', tags=[colaborador_tag],
-            responses={"200": dict, "404": ErrorSchema})
+            responses={"200": ColaboradorDelSchema, "404": ErrorSchema, "400": ErrorSchema})
 def del_colaborador(query: ColaboradorBuscaSchema):
     """Deleta um Colaborador a partir do nome informado
     """
@@ -168,7 +169,7 @@ def del_colaborador(query: ColaboradorBuscaSchema):
     session.close()
 
     if count:
-        return {"message": "Colaborador removido", "nome": nome_colaborador}
+        return {"message": "Colaborador removido", "nome": nome_colaborador}, 200
     else:
         error_msg = "Colaborador não encontrado na base."
         return {"message": error_msg}, 404

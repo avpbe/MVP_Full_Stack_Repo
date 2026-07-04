@@ -6,10 +6,10 @@ from models import Base
 
 # Lista para Status do Projeto
 class StatusProjeto(str, enum.Enum):
-    ABERTA = "Aberta"
+    ABERTO = "Aberto"
     EM_ANDAMENTO = "Em Andamento"
-    CONCLUIDA = "Concluída"
-    CANCELADA = "Cancelada"
+    CONCLUIDO = "Concluído"
+    CANCELADO = "Cancelado"
 
 class Projeto(Base):
     __tablename__ = 'projeto'
@@ -18,7 +18,7 @@ class Projeto(Base):
     nome_projeto = Column(String(100), unique=True, nullable=False)
     disciplina = Column(String(100))
     descricao = Column(String(500))
-    status = Column(SQLAlchemyEnum(StatusProjeto), nullable=False, default=StatusProjeto.ABERTA)
+    status = Column(SQLAlchemyEnum(StatusProjeto), nullable=False, default=StatusProjeto.ABERTO)
     data_inicio = Column(DateTime, nullable=False)
     data_fim = Column(DateTime, nullable=False)
     data_insercao = Column(DateTime, default=datetime.now())

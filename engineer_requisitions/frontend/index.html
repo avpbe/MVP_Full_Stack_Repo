@@ -65,21 +65,27 @@
             <section class="card mb-4 custom-card">
                 <div class="card-header"><span>Nova Requisição</span></div>
                 <div class="card-body">
-                    <form id="new-request-form">
-                        <input type="text" class="form-control mb-3" id="projectName" placeholder="Nome do Projeto" required>
-                        <input type="text" class="form-control mb-3" id="discipline" placeholder="Disciplina" required>
-                        <textarea class="form-control mb-3" id="description" rows="2" placeholder="Descrição"></textarea>
-                        <select class="form-select mb-3" id="projectEngineer" required>
+                    <form id="new-project-form">
+                        <input type="text" class="form-control mb-3" id="projectName" name="projectName" placeholder="Nome do Projeto" required>
+                        <input type="text" class="form-control mb-3" id="discipline" name="discipline" placeholder="Disciplina" required>
+                        <textarea class="form-control mb-3" id="description" name="description" rows="2" placeholder="Descrição"></textarea>
+                        <select class="form-select mb-3" id="projectEngineer" name="projectEngineer" required>
                             <option value="" selected disabled>Atribuir a um engenheiro...</option>
+                        </select>
+                        <select class="form-select mb-3" id="projectStatus" name="projectStatus" required>
+                            <option value="Aberto" selected>Status: Aberto</option>
+                            <option value="Em Andamento">Status: Em Andamento</option>
+                            <option value="Concluído">Status: Concluído</option>
+                            <option value="Cancelado">Status: Cancelado</option>
                         </select>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="startDate" class="form-label">Data de Início</label>
-                                <input type="date" class="form-control" id="startDate" required>
+                                <input type="date" class="form-control" id="startDate" name="startDate" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="endDate" class="form-label">Data de Fim</label>
-                                <input type="date" class="form-control" id="endDate" required>
+                                <input type="date" class="form-control" id="endDate" name="endDate" required>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Adicionar Requisição</button>
@@ -94,7 +100,7 @@
                         <input type="text" class="form-control" id="searchInput" placeholder="Buscar por nome do projeto...">
                         <button class="btn btn-secondary" type="button" onclick="searchRequest()">Buscar</button>
                     </div>
-                    <div id="requests-list" class="row"></div>
+                    <div id="projects-list" class="row"></div>
                 </div>
             </section>
         </div>
@@ -107,16 +113,23 @@
                 <div class="card-header"><span>Cadastrar Novo Engenheiro</span></div>
                 <div class="card-body">
                     <form id="new-engineer-form">
-                        <input type="text" class="form-control mb-3" id="engineerName" placeholder="Nome Completo" required>
+                        <input type="text" class="form-control mb-3" id="engineerName" name="engineerName" placeholder="Nome Completo" required>
                         <div class="row">
-                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerRole" placeholder="Cargo" required></div>
-                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerDiscipline" placeholder="Disciplina" required></div>
+                            <div class="col-md-6 mb-3">
+                                <select class="form-select" id="engineerRole" name="engineerRole" required>
+                                    <option value="" selected disabled>Selecione o Cargo...</option>
+                                    <option value="Engenheiro Junior">Engenheiro Junior</option>
+                                    <option value="Engenheiro Pleno">Engenheiro Pleno</option>
+                                    <option value="Engenheiro Senior">Engenheiro Senior</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerDiscipline" name="engineerDiscipline" placeholder="Disciplina" required></div>
                         </div>
-                        <select class="form-select mb-3" id="engineerPlatformRole" required>
+                        <select class="form-select mb-3" id="engineerPlatformRole" name="engineerPlatformRole" required>
                             <option value="" selected disabled>Selecione a atribuição...</option>
-                            <option value="Admin">Admin</option>
-                            <option value="Checker">Checker</option>
-                            <option value="Executer">Executer</option>
+                            <option value="Elaborador">Elaborador</option>
+                            <option value="Revisor">Revisor</option>
+                            <option value="Aprovador">Aprovador</option>
                         </select>
                         <button type="submit" class="btn btn-success w-100">Cadastrar Engenheiro</button>
                     </form>
@@ -159,7 +172,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/scripts_no_api.js"></script>
+    <script src="js/scripts_api.js"></script>
 </body>
 
 </html>

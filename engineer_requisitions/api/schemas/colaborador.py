@@ -25,6 +25,13 @@ class ListagemColaboradoresSchema(BaseModel):
     """ Define como uma listagem de colaboradores será retornada. """
     colaboradores: List[ColaboradorViewSchema]
 
+class ColaboradorDelSchema(BaseModel):
+    """ Define como deve ser a estrutura do dado retornado após uma requisição
+        de remoção.
+    """
+    message: str
+    nome: str
+
 def apresenta_colaboradores(colaboradores: List[Colaborador]):
     """ Retorna uma representação do colaborador seguindo o schema definido em
         ListagemColaboradoresSchema.
