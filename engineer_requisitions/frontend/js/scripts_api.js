@@ -15,8 +15,16 @@ const showView = (viewId, headerTitle) => {
     if (titleElement) titleElement.textContent = headerTitle;
 
     // Ações específicas ao mostrar uma view (pode ser expandido no futuro)
-    // if (viewId === 'schedule-view') { ... }
+    if (viewId === 'requests-view') {
+        getProjetos();
+        getColaboradores();
+    }
+    if (viewId === 'engineers-view') {
+        getColaboradores();
+    }
 };
+
+
 
 
 /*
@@ -87,9 +95,9 @@ const addProjetoToCard = (projeto) => {
     cardCol.className = 'col-md-4 mb-4';
     cardCol.innerHTML = `
         <div class="card h-100">
-            <div class="card-body">
+            <div class="card-body position-relative">
                 <div class="position-absolute top-0 end-0 p-2">
-                    <button class="btn btn-sm" onclick='openEditModal(${JSON.stringify(projeto)})' title="Editar projeto">
+                    <button class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#projectModal" onclick='openProjectModal(${JSON.stringify(projeto)})' title="Editar projeto">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/></svg>
                     </button>
                     <button class="btn btn-sm" onclick="deleteProjeto('${projeto.nome_projeto}')" title="Remover projeto">
@@ -121,43 +129,6 @@ const getStatusBadge = (status) => {
 }
 
 /**
- * Envia um novo projeto para a API.
- */
-const postProjeto = async (event) => {
-    event.preventDefault();
-    const form = event.target;
-    const body = {
-        nome_projeto: form.projectName.value,
-        disciplina: form.discipline.value,
-        descricao: form.description.value,
-        status: form.projectStatus.value,
-        data_inicio: form.startDate.value,
-        data_fim: form.endDate.value,
-        colaborador_id: parseInt(form.projectEngineer.value) || null
-    };
-
-    try {
-        const response = await fetch(`${API_URL}/projeto`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        if (response.ok) {
-            alert("Projeto adicionado com sucesso!");
-            getProjetos(); // Atualiza a lista de projetos
-            form.reset();
-        } else {
-            const errorData = await response.json();
-            alert(`Erro ao adicionar projeto: ${errorData.message}`);
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        alert("Ocorreu um erro ao tentar adicionar o projeto.");
-    }
-};
-
-/**
  * Deleta um projeto via API.
  * @param {string} nomeProjeto - O nome do projeto a ser deletado.
  */
@@ -183,74 +154,84 @@ const deleteProjeto = async (nomeProjeto) => {
 };
 
 /**
- * Abre o modal de edição e preenche com os dados do projeto.
- * @param {object} projeto - O objeto do projeto a ser editado.
+ * Abre e configura o modal de projeto para Adição ou Edição.
+ * @param {object | null} projeto - O objeto do projeto para edição, ou null para adição.
  */
-const openEditModal = (projeto) => {
-    // Preenche os campos do formulário no modal
-    document.getElementById('editProjectOriginalName').value = projeto.nome_projeto;
-    document.getElementById('editProjectName').value = projeto.nome_projeto;
-    document.getElementById('editProjectDescription').value = projeto.descricao;
+const openProjectModal = (projeto = null) => {
+    const form = document.getElementById('project-form');
+    const modalLabel = document.getElementById('projectModalLabel');
+    const submitButton = document.getElementById('projectSubmitButton');
+    const originalNameInput = document.getElementById('projectOriginalName');
 
-    // Popula e seleciona o status
-    const statusSelect = document.getElementById('editProjectStatus');
-    statusSelect.innerHTML = ''; // Limpa opções antigas
-    ['Aberto', 'Em Andamento', 'Concluído', 'Cancelado'].forEach(status => {
-        const option = new Option(`Status: ${status}`, status);
-        if (status === projeto.status) {
-            option.selected = true;
-        }
-        statusSelect.add(option);
-    });
+    form.reset(); // Limpa o formulário
 
-    // Popula e seleciona o engenheiro
-    const engineerSelect = document.getElementById('editProjectEngineer');
-    const projectEngineerOptions = document.getElementById('projectEngineer').innerHTML; // Pega opções já carregadas
-    engineerSelect.innerHTML = projectEngineerOptions;
-    if (projeto.colaborador) {
-        engineerSelect.value = projeto.colaborador.id;
-    } else {
-        engineerSelect.value = ""; // Seleciona "Atribuir a um engenheiro..."
+    if (projeto) { // Modo Edição
+        modalLabel.textContent = 'Editar Projeto';
+        submitButton.textContent = 'Salvar Alterações';
+        submitButton.className = 'btn btn-primary';
+
+        originalNameInput.value = projeto.nome_projeto;
+        form.projectName.value = projeto.nome_projeto;
+        form.discipline.value = projeto.disciplina;
+        form.description.value = projeto.descricao;
+        form.projectStatus.value = projeto.status;
+        form.startDate.value = new Date(projeto.data_inicio).toISOString().split('T')[0];
+        form.endDate.value = new Date(projeto.data_fim).toISOString().split('T')[0];
+        form.projectEngineer.value = projeto.colaborador ? projeto.colaborador.id : "";
+
+    } else { // Modo Adição
+        modalLabel.textContent = 'Nova Requisição';
+        submitButton.textContent = 'Adicionar Requisição';
+        submitButton.className = 'btn btn-primary';
+        originalNameInput.value = ''; // Garante que está vazio para o modo de adição
     }
-
-    // Abre o modal
-    const modal = new bootstrap.Modal(document.getElementById('editProjectModal'));
-    modal.show();
 };
 
 /**
- * Submete o formulário de edição do projeto.
+ * Manipula a submissão do formulário de projeto (criação ou atualização).
  */
-const submitProjectEdit = async () => {
-    const form = document.getElementById('edit-project-form');
-    const originalName = form.originalName.value;
+const handleProjectSubmit = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const originalName = document.getElementById('projectOriginalName').value;
+    const isEditMode = !!originalName;
 
     const body = {
-        nome_projeto: form.nome_projeto.value,
-        descricao: form.descricao.value,
-        status: form.status.value,
-        colaborador_id: parseInt(form.colaborador_id.value) || null
+        nome_projeto: form.projectName.value,
+        disciplina: form.discipline.value,
+        descricao: form.description.value,
+        status: form.projectStatus.value,
+        data_inicio: form.startDate.value,
+        data_fim: form.endDate.value,
+        colaborador_id: parseInt(form.projectEngineer.value) || null
     };
 
+    const url = isEditMode ? `${API_URL}/projeto?nome_projeto=${encodeURIComponent(originalName)}` : `${API_URL}/projeto`;
+    const method = isEditMode ? 'PUT' : 'POST';
+
     try {
-        const response = await fetch(`${API_URL}/projeto?nome_projeto=${encodeURIComponent(originalName)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
+        const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
         if (response.ok) {
-            alert("Projeto atualizado com sucesso!");
-            getProjetos(); // Atualiza a lista de projetos
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editProjectModal'));
+            alert(`Projeto ${isEditMode ? 'atualizado' : 'adicionado'} com sucesso!`);
+            const modalEl = document.getElementById('projectModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            // A forma correta de lidar com a atualização da UI após fechar um modal.
+            // O evento 'hidden.bs.modal' é disparado somente quando a animação de fechar termina.
+            // A opção { once: true } garante que este listener seja executado apenas uma vez.
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                getProjetos();
+            }, { once: true });
+            
             modal.hide();
         } else {
             const errorData = await response.json();
-            alert(`Erro ao atualizar projeto: ${errorData.message}`);
+            alert(`Erro ao ${isEditMode ? 'atualizar' : 'adicionar'} projeto: ${errorData.message}`);
         }
     } catch (error) {
         console.error('Erro:', error);
-        alert("Ocorreu um erro ao tentar atualizar o projeto.");
+        alert(`Ocorreu um erro ao tentar ${isEditMode ? 'atualizar' : 'adicionar'} o projeto.`);
     }
 };
 
@@ -272,7 +253,7 @@ const getColaboradores = async () => {
         const data = await response.json();
         const dropdown = document.getElementById('projectEngineer'); // Supondo um <select> no seu form de projeto
         renderColaboradores(data.colaboradores); // Renderiza a lista de engenheiros na tela
-        
+
         if (dropdown) {
             // Limpa opções antigas, mantendo a primeira ("Selecione...")
             while (dropdown.options.length > 1) {
@@ -317,7 +298,7 @@ const renderColaboradores = (colaboradores) => {
             </div>
             <div>
                 ${atribuicaoBadge}
-                <button class="btn btn-sm btn-outline-primary ms-2" onclick='openEditColaboradorModal(${JSON.stringify(colab)})' title="Editar Colaborador">
+                <button class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#colaboradorModal" onclick='openColaboradorModal(${JSON.stringify(colab)})' title="Editar Colaborador">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg>
                 </button>
                 <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteColaborador('${colab.nome}')" title="Remover Colaborador">&times;</button>
@@ -325,40 +306,6 @@ const renderColaboradores = (colaboradores) => {
         `;
         engineersList.appendChild(item);
     });
-};
-
-/**
- * Envia um novo colaborador para a API.
- */
-const postColaborador = async (event) => {
-    event.preventDefault();
-    const form = event.target;
-    const body = {
-        nome: form.engineerName.value,
-        cargo: form.engineerRole.value,
-        disciplina: form.engineerDiscipline.value,
-        atribuicao: form.engineerPlatformRole.value
-    };
-
-    try {
-        const response = await fetch(`${API_URL}/colaborador`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-
-        if (response.ok) {
-            alert("Colaborador adicionado com sucesso!");
-            getColaboradores(); // Atualiza a lista de colaboradores no dropdown
-            form.reset();
-        } else {
-            const errorData = await response.json();
-            alert(`Erro ao adicionar colaborador: ${errorData.message}`);
-        }
-    } catch (error) {
-        console.error('Erro:', error);
-        alert("Ocorreu um erro ao tentar adicionar o colaborador.");
-    }
 };
 
 /**
@@ -387,69 +334,72 @@ const deleteColaborador = async (nomeColaborador) => {
 };
 
 /**
- * Abre o modal de edição de colaborador e preenche com os dados.
- * @param {object} colaborador - O objeto do colaborador a ser editado.
+ * Abre e configura o modal de colaborador para Adição ou Edição.
+ * @param {object | null} colaborador - O objeto do colaborador para edição, ou null para adição.
  */
-const openEditColaboradorModal = (colaborador) => {
-    document.getElementById('editColaboradorOriginalName').value = colaborador.nome;
-    document.getElementById('editColaboradorName').value = colaborador.nome;
-    document.getElementById('editColaboradorDiscipline').value = colaborador.disciplina;
+const openColaboradorModal = (colaborador = null) => {
+    const form = document.getElementById('colaborador-form');
+    const modalLabel = document.getElementById('colaboradorModalLabel');
+    const submitButton = document.getElementById('colaboradorSubmitButton');
+    const originalNameInput = document.getElementById('colaboradorOriginalName');
 
-    // Popula e seleciona o cargo
-    const roleSelect = document.getElementById('editColaboradorRole');
-    roleSelect.innerHTML = '';
-    ['Engenheiro Junior', 'Engenheiro Pleno', 'Engenheiro Senior'].forEach(role => {
-        const option = new Option(role, role);
-        if (role === colaborador.cargo) option.selected = true;
-        roleSelect.add(option);
-    });
+    form.reset();
 
-    // Popula e seleciona a atribuição
-    const platformRoleSelect = document.getElementById('editColaboradorPlatformRole');
-    platformRoleSelect.innerHTML = '';
-    ['Elaborador', 'Revisor', 'Aprovador'].forEach(role => {
-        const option = new Option(role, role);
-        if (role === colaborador.atribuicao) option.selected = true;
-        platformRoleSelect.add(option);
-    });
-
-    const modal = new bootstrap.Modal(document.getElementById('editColaboradorModal'));
-    modal.show();
+    if (colaborador) { // Modo Edição
+        modalLabel.textContent = 'Editar Colaborador';
+        submitButton.textContent = 'Salvar Alterações';
+        originalNameInput.value = colaborador.nome;
+        form.engineerName.value = colaborador.nome;
+        form.engineerRole.value = colaborador.cargo;
+        form.engineerDiscipline.value = colaborador.disciplina;
+        form.engineerPlatformRole.value = colaborador.atribuicao;
+    } else { // Modo Adição
+        modalLabel.textContent = 'Cadastrar Novo Engenheiro';
+        submitButton.textContent = 'Cadastrar Engenheiro';
+        originalNameInput.value = '';
+    }
 };
 
 /**
- * Submete o formulário de edição do colaborador.
+ * Manipula a submissão do formulário de colaborador (criação ou atualização).
  */
-const submitColaboradorEdit = async () => {
-    const form = document.getElementById('edit-colaborador-form');
-    const originalName = form.originalName.value;
+const handleColaboradorSubmit = async (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const originalName = document.getElementById('colaboradorOriginalName').value;
+    const isEditMode = !!originalName;
 
     const body = {
-        nome: form.nome.value,
-        cargo: form.cargo.value,
-        disciplina: form.disciplina.value,
-        atribuicao: form.atribuicao.value
+        nome: form.engineerName.value,
+        cargo: form.engineerRole.value,
+        disciplina: form.engineerDiscipline.value,
+        atribuicao: form.engineerPlatformRole.value
     };
 
+    const url = isEditMode ? `${API_URL}/colaborador?nome=${encodeURIComponent(originalName)}` : `${API_URL}/colaborador`;
+    const method = isEditMode ? 'PUT' : 'POST';
+
     try {
-        const response = await fetch(`${API_URL}/colaborador?nome=${encodeURIComponent(originalName)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
+        const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 
         if (response.ok) {
-            alert("Colaborador atualizado com sucesso!");
-            getColaboradores(); // Atualiza a lista de colaboradores
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editColaboradorModal'));
+            alert(`Colaborador ${isEditMode ? 'atualizado' : 'adicionado'} com sucesso!`);
+            const modalEl = document.getElementById('colaboradorModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            // Adiciona um listener para atualizar a lista APÓS o modal ser completamente fechado
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                getColaboradores();
+            }, { once: true });
+            
             modal.hide();
         } else {
             const errorData = await response.json();
-            alert(`Erro ao atualizar colaborador: ${errorData.message}`);
+            alert(`Erro ao ${isEditMode ? 'atualizar' : 'adicionar'} colaborador: ${errorData.message}`);
         }
     } catch (error) {
         console.error('Erro:', error);
-        alert("Ocorreu um erro ao tentar atualizar o colaborador.");
+        alert(`Ocorreu um erro ao tentar ${isEditMode ? 'atualizar' : 'adicionar'} o colaborador.`);
     }
 };
 
@@ -463,16 +413,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mostra a tela inicial do dashboard
     showView('dashboard-view', 'Dashboard Principal');
 
-    // Carrega dados da API em segundo plano
-    getProjetos();
-    getColaboradores();
+    // Adiciona listeners aos botões de "Adicionar" para abrir os modais em modo de criação
+    document.querySelector('button[data-bs-target="#projectModal"]').addEventListener('click', () => openProjectModal());
+    document.querySelector('button[data-bs-target="#colaboradorModal"]').addEventListener('click', () => openColaboradorModal());
 
     // Adiciona listeners aos formulários
-    const newProjectForm = document.getElementById('new-project-form');
-    if (newProjectForm) newProjectForm.addEventListener('submit', postProjeto);
+    const projectForm = document.getElementById('project-form');
+    if (projectForm) projectForm.addEventListener('submit', handleProjectSubmit);
 
-    const newEngineerForm = document.getElementById('new-engineer-form');
-    if (newEngineerForm) newEngineerForm.addEventListener('submit', postColaborador);
+    const colaboradorForm = document.getElementById('colaborador-form');
+    if (colaboradorForm) colaboradorForm.addEventListener('submit', handleColaboradorSubmit);
 
     // Adiciona listener para a barra de busca de projetos
     const searchInput = document.getElementById('project-search-input');

@@ -60,38 +60,10 @@
 
         <!-- 2. TELA DE REQUISIÇÕES -->
         <div id="requests-view" class="view">
-            <button class="btn btn-outline-secondary mb-3" onclick="showView('dashboard-view', 'Dashboard Principal')">← Voltar ao Dashboard</button>
-
-            <section class="card mb-4 custom-card">
-                <div class="card-header"><span>Nova Requisição</span></div>
-                <div class="card-body">
-                    <form id="new-project-form">
-                        <input type="text" class="form-control mb-3" id="projectName" name="projectName" placeholder="Nome do Projeto" required>
-                        <input type="text" class="form-control mb-3" id="discipline" name="discipline" placeholder="Disciplina" required>
-                        <textarea class="form-control mb-3" id="description" name="description" rows="2" placeholder="Descrição"></textarea>
-                        <select class="form-select mb-3" id="projectEngineer" name="projectEngineer" required>
-                            <option value="" selected disabled>Atribuir a um engenheiro...</option>
-                        </select>
-                        <select class="form-select mb-3" id="projectStatus" name="projectStatus" required>
-                            <option value="Aberto" selected>Status: Aberto</option>
-                            <option value="Em Andamento">Status: Em Andamento</option>
-                            <option value="Concluído">Status: Concluído</option>
-                            <option value="Cancelado">Status: Cancelado</option>
-                        </select>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="startDate" class="form-label">Data de Início</label>
-                                <input type="date" class="form-control" id="startDate" name="startDate" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="endDate" class="form-label">Data de Fim</label>
-                                <input type="date" class="form-control" id="endDate" name="endDate" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Adicionar Requisição</button>
-                    </form>
-                </div>
-            </section>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-outline-secondary" onclick="showView('dashboard-view', 'Dashboard Principal')">← Voltar ao Dashboard</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">Adicionar Nova Requisição</button>
+            </div>
       
             <section class="card custom-card">
                 <div class="card-header">Requisições Cadastradas</div>
@@ -106,34 +78,10 @@
 
         <!-- 3. TELA DE ENGENHEIROS -->
         <div id="engineers-view" class="view">
-            <button class="btn btn-outline-secondary mb-3" onclick="showView('dashboard-view', 'Dashboard Principal')">← Voltar ao Dashboard</button>
-
-            <section class="card mb-4 custom-card">
-                <div class="card-header"><span>Cadastrar Novo Engenheiro</span></div>
-                <div class="card-body">
-                    <form id="new-engineer-form">
-                        <input type="text" class="form-control mb-3" id="engineerName" name="engineerName" placeholder="Nome Completo" required>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <select class="form-select" id="engineerRole" name="engineerRole" required>
-                                    <option value="" selected disabled>Selecione o Cargo...</option>
-                                    <option value="Engenheiro Junior">Engenheiro Junior</option>
-                                    <option value="Engenheiro Pleno">Engenheiro Pleno</option>
-                                    <option value="Engenheiro Senior">Engenheiro Senior</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerDiscipline" name="engineerDiscipline" placeholder="Disciplina" required></div>
-                        </div>
-                        <select class="form-select mb-3" id="engineerPlatformRole" name="engineerPlatformRole" required>
-                            <option value="" selected disabled>Selecione a atribuição...</option>
-                            <option value="Elaborador">Elaborador</option>
-                            <option value="Revisor">Revisor</option>
-                            <option value="Aprovador">Aprovador</option>
-                        </select>
-                        <button type="submit" class="btn btn-success w-100">Cadastrar Engenheiro</button>
-                    </form>
-                </div>
-            </section>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-outline-secondary" onclick="showView('dashboard-view', 'Dashboard Principal')">← Voltar ao Dashboard</button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#colaboradorModal">Cadastrar Novo Engenheiro</button>
+            </div>
 
             <section class="card custom-card">
                 <div class="card-header">Engenheiros Cadastrados</div>
@@ -170,81 +118,85 @@
 
     </main>
 
-    <!-- MODAL DE EDIÇÃO DE PROJETO -->
-    <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <!-- MODAL UNIFICADO DE PROJETO (ADIÇÃO/EDIÇÃO) -->
+    <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editProjectModalLabel">Editar Projeto</h5>
+                    <h5 class="modal-title" id="projectModalLabel">Nova Requisição</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="edit-project-form">
-                        <!-- Campo oculto para armazenar o nome original do projeto -->
-                        <input type="hidden" id="editProjectOriginalName" name="originalName">
+                    <form id="project-form">
+                        <!-- Campo oculto para armazenar o nome original do projeto durante a edição -->
+                        <input type="hidden" id="projectOriginalName">
 
-                        <div class="mb-3">
-                            <label for="editProjectName" class="form-label">Nome do Projeto</label>
-                            <input type="text" class="form-control" id="editProjectName" name="nome_projeto" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editProjectDescription" class="form-label">Descrição</label>
-                            <textarea class="form-control" id="editProjectDescription" name="descricao" rows="3"></textarea>
-                        </div>
+                        <input type="text" class="form-control mb-3" id="projectName" name="projectName" placeholder="Nome do Projeto" required>
+                        <input type="text" class="form-control mb-3" id="discipline" name="discipline" placeholder="Disciplina" required>
+                        <textarea class="form-control mb-3" id="description" name="description" rows="2" placeholder="Descrição"></textarea>
+                        <select class="form-select mb-3" id="projectEngineer" name="projectEngineer" required>
+                            <option value="">Nenhum engenheiro atribuído</option>
+                        </select>
+                        <select class="form-select mb-3" id="projectStatus" name="projectStatus" required>
+                            <option value="Aberto" selected>Status: Aberto</option>
+                            <option value="Em Andamento">Status: Em Andamento</option>
+                            <option value="Concluído">Status: Concluído</option>
+                            <option value="Cancelado">Status: Cancelado</option>
+                        </select>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editProjectStatus" class="form-label">Status</label>
-                                <select class="form-select" id="editProjectStatus" name="status"></select>
+                                <label for="startDate" class="form-label">Data de Início</label>
+                                <input type="date" class="form-control" id="startDate" name="startDate" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="editProjectEngineer" class="form-label">Engenheiro Responsável</label>
-                                <select class="form-select" id="editProjectEngineer" name="colaborador_id"></select>
+                                <label for="endDate" class="form-label">Data de Fim</label>
+                                <input type="date" class="form-control" id="endDate" name="endDate" required>
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="submitProjectEdit()">Salvar Alterações</button>
+                    <button type="submit" form="project-form" id="projectSubmitButton" class="btn btn-primary">Adicionar Requisição</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE EDIÇÃO DE COLABORADOR -->
-    <div class="modal fade" id="editColaboradorModal" tabindex="-1" aria-labelledby="editColaboradorModalLabel" aria-hidden="true">
+    <!-- MODAL UNIFICADO DE COLABORADOR (ADIÇÃO/EDIÇÃO) -->
+    <div class="modal fade" id="colaboradorModal" tabindex="-1" aria-labelledby="colaboradorModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editColaboradorModalLabel">Editar Colaborador</h5>
+                    <h5 class="modal-title" id="colaboradorModalLabel">Cadastrar Novo Engenheiro</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="edit-colaborador-form">
-                        <input type="hidden" id="editColaboradorOriginalName" name="originalName">
-                        <div class="mb-3">
-                            <label for="editColaboradorName" class="form-label">Nome Completo</label>
-                            <input type="text" class="form-control" id="editColaboradorName" name="nome" required>
-                        </div>
+                    <form id="colaborador-form">
+                        <input type="hidden" id="colaboradorOriginalName">
+                        <input type="text" class="form-control mb-3" id="engineerName" name="engineerName" placeholder="Nome Completo" required>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editColaboradorRole" class="form-label">Cargo</label>
-                                <select class="form-select" id="editColaboradorRole" name="cargo"></select>
+                                <select class="form-select" id="engineerRole" name="engineerRole" required>
+                                    <option value="" selected disabled>Selecione o Cargo...</option>
+                                    <option value="Engenheiro Junior">Engenheiro Junior</option>
+                                    <option value="Engenheiro Pleno">Engenheiro Pleno</option>
+                                    <option value="Engenheiro Senior">Engenheiro Senior</option>
+                                </select>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editColaboradorDiscipline" class="form-label">Disciplina</label>
-                                <input type="text" class="form-control" id="editColaboradorDiscipline" name="disciplina" required>
-                            </div>
+                            <div class="col-md-6 mb-3"><input type="text" class="form-control" id="engineerDiscipline" name="engineerDiscipline" placeholder="Disciplina" required></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="editColaboradorPlatformRole" class="form-label">Atribuição na Plataforma</label>
-                            <select class="form-select" id="editColaboradorPlatformRole" name="atribuicao"></select>
-                        </div>
+                        <select class="form-select mb-3" id="engineerPlatformRole" name="engineerPlatformRole" required>
+                            <option value="" selected disabled>Selecione a atribuição...</option>
+                            <option value="Elaborador">Elaborador</option>
+                            <option value="Revisor">Revisor</option>
+                            <option value="Aprovador">Aprovador</option>
+                        </select>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" onclick="submitColaboradorEdit()">Salvar Alterações</button>
+                    <button type="submit" form="colaborador-form" id="colaboradorSubmitButton" class="btn btn-success">Cadastrar Engenheiro</button>
                 </div>
             </div>
         </div>
