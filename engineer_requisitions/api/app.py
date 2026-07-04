@@ -271,22 +271,3 @@ if __name__ == '__main__':
     # Cria o banco de dados e as tabelas, se não existirem
     Base.metadata.create_all(engine)
     app.run(host='0.0.0.0', port=5000)
-
-'''
-
-### Próximos Passos
-
-1.  **Configuração do Ambiente**: Crie um ambiente virtual, instale as dependências (`flask`, `flask-openapi3`, `flask-cors`, `sqlalchemy`, `pydantic`) e execute `app.py` para iniciar o servidor e criar o banco de dados `requisicoes.db`.
-2.  **Teste a API**: Acesse `http://127.0.0.1:5000/openapi` no seu navegador para interagir com a documentação do Swagger e testar as rotas.
-3.  **Desenvolvimento do Frontend**: Com a API funcionando, você pode começar a desenvolver a SPA em HTML, CSS e JavaScript, fazendo chamadas para essas rotas para exibir, criar e remover as requisições.
-
-Esta base de código já cumpre os principais requisitos do backend e fornece uma fundação sólida para você expandir com funcionalidades adicionais, como edição de requisições, tratamento de usuários e relacionamentos mais complexos.
-
-Espero que isso ajude você a começar com o pé direito no seu projeto!
-
-<!--
-[PROMPT_SUGGESTION]Como eu adiciono uma rota de atualização (PUT/PATCH) para modificar uma requisição existente?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Mostre-me como seria o código JavaScript no frontend para buscar e exibir a lista de todas as requisições cadastradas.[/PROMPT_SUGGESTION]
--->
-
-'''

@@ -2,21 +2,21 @@ const API_URL = 'http://127.0.0.1:5000';
   
 /*
   --------------------------------------------------------------------------------------
-  Função para obter a lista de requisições existentes do servidor via requisição GET
+  Função para obter a lista de projetos existentes do servidor via requisição GET
   --------------------------------------------------------------------------------------
 */
 const getRequests = async () => {
     try {
         const response = await fetch(`${API_URL}/requisicoes`);
         if (!response.ok) {
-            throw new Error("Não foi possível carregar as requisições.");
+            throw new Error("Não foi possível carregar os projetos.");
         }
         const data = await response.json();
         const requestsList = document.getElementById('requests-list');
         requestsList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
         data.requisicoes.forEach(req => addRequestToTable(req));
     } catch (error) {
-        console.error('Erro ao buscar requisições:', error);
+        console.error('Erro ao buscar projetos:', error);
     }
 };
   
@@ -119,5 +119,5 @@ document.getElementById('new-request-form').addEventListener('submit', function 
     this.reset(); // Limpa o formulário
 });
   
-// Carrega a lista de requisições ao iniciar a página
+// Carrega a lista de projetos ao iniciar a página
 document.addEventListener('DOMContentLoaded', getRequests);

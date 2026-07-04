@@ -9,6 +9,7 @@
     <link href="css/style.css" rel="stylesheet">
     <style>
         .dashboard-card { cursor: pointer; }
+        .dashboard-icon { width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.8; }
         .view { display: none; }
  
         /* Estilos para o Gantt Chart */
@@ -41,19 +42,21 @@
         <!-- 1. TELA DO DASHBOARD (INICIAL) -->
         <div id="dashboard-view" class="view">
             <div class="row justify-content-center g-4">
-                <!-- Card de Requisições -->
+                <!-- Card de Projetos -->
                 <div class="col-md-6 col-lg-4">
-                    <div class="card text-center custom-card p-4 dashboard-card" onclick="showView('requests-view', 'Gerenciamento de Requisições')">
+                    <div class="card text-center custom-card p-4 dashboard-card" onclick="showView('requests-view', 'Gerenciamento de Projetos')">
                         <div class="card-body">
-                            <h2 class="card-title">Requisições</h2>
-                            <p class="card-text">Gerencie, crie e consulte as requisições de projetos.</p>
+                            <img src="icons/projects.png" alt="Ícone de Projetos" class="dashboard-icon">
+                            <h2 class="card-title">Projetos</h2>
+                            <p class="card-text">Gerencie, crie e consulte projetos na plataforma.</p>
                         </div>
                     </div>
                 </div>
-                <!-- Card de Engenheiros -->
+                <!-- Card de Colaboradores -->
                 <div class="col-md-6 col-lg-4">
                     <div class="card text-center custom-card p-4 dashboard-card" onclick="showView('engineers-view', 'Gerenciamento de Equipe')">
                         <div class="card-body">
+                            <img src="icons/employers.png" alt="Ícone de Equipe" class="dashboard-icon">
                             <h2 class="card-title">Equipe</h2>
                             <p class="card-text">Adicione e gerencie os membros da equipe na plataforma.</p>
                         </div>
@@ -63,15 +66,16 @@
                 <div class="col-md-6 col-lg-4">
                     <div class="card text-center custom-card p-4 dashboard-card" onclick="showView('schedule-view', 'Cronograma de Projetos')">
                         <div class="card-body">
+                            <img src="icons/calendar.png" alt="Ícone de Calendário" class="dashboard-icon">
                             <h2 class="card-title">Cronograma</h2>
-                            <p class="card-text">Visualize a alocação de projetos dos engenheiros.</p>
+                            <p class="card-text">Visualize a alocação de projetos dos colaboradores.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. TELA DE REQUISIÇÕES -->
+        <!-- 2. TELA DE PROJETOS -->
         <div id="requests-view" class="view">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <button class="btn btn-outline-secondary" onclick="showView('dashboard-view', 'Dashboard Principal')">← Voltar ao Dashboard</button>
@@ -79,7 +83,7 @@
             </div>
       
             <section class="card custom-card">
-                <div class="card-header">Requisições Cadastradas</div>
+                <div class="card-header">Projetos Cadastrados</div>
                 <div class="card-body">
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" id="project-search-input" placeholder="Buscar por nome do projeto...">
