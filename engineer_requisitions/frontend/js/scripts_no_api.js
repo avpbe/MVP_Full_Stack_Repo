@@ -12,7 +12,7 @@ const showView = (viewId, headerTitle) => {
     if (titleElement) titleElement.textContent = headerTitle;
 
     // Ações específicas ao mostrar uma view
-    if (viewId === 'requests-view') populateEngineersDropdown('projectEngineer');
+    if (viewId === 'projects-view') populateEngineersDropdown('projectEngineer');
     if (viewId === 'schedule-view') {
         populateEngineersDropdown('ganttEngineerSelect');
         renderGanttChart(); // Renderiza o gantt vazio ou com seleção anterior
@@ -34,7 +34,7 @@ const setLocalData = (key, data) => {
     localStorage.setItem(key, JSON.stringify(data));
 };
 
-let localRequests = getLocalData('localRequests', [
+let localProjects = getLocalData('localProjects', [
     { nome_projeto: "Projeto Alfa", disciplina: "Estruturas", descricao: "Análise da P-76.", status: "Aberta", engineer: "João da Silva", startDate: "2024-01-15", endDate: "2024-03-20" },
     { nome_projeto: "Projeto Beta", disciplina: "Instalação", descricao: "Dutos de Tupi.", status: "Em Andamento", engineer: "Maria Oliveira", startDate: "2024-02-10", endDate: "2024-05-30" },
     { nome_projeto: "Projeto Delta", disciplina: "Estruturas", descricao: "Conectores.", status: "Aberta", engineer: "João da Silva", startDate: "2024-04-01", endDate: "2024-07-15" }
@@ -48,29 +48,29 @@ let localEngineers = getLocalData('localEngineers', [
 
 /*
   ======================================================================================
-  LÓGICA PARA REQUISIÇÕES DE PROJETOS
+  LÓGICA PARA PROJETOS
   ======================================================================================
 */
 
-const renderRequests = (requests = localRequests) => {
-    const list = document.getElementById('requests-list');
+const renderProjects = (projects = localProjects) => {
+    const list = document.getElementById('projects-list');
     if (!list) return;
     list.innerHTML = '';
-    requests.forEach(req => {
+    projects.forEach(proj => {
         const card = document.createElement('div');
         card.className = 'col-md-6 mb-4';
         card.innerHTML = `
-            <div class="card h-100 request-card">
+            <div class="card h-100 project-card">
                 <div class="card-body">
-                    <button class="btn-close delete-btn" onclick="deleteRequest('${req.nome_projeto}')"></button>
-                    <h5 class="card-title">${req.nome_projeto}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">${req.disciplina}</h6>
-                    <p class="card-text">${req.descricao}</p>
-                    <p class="card-text"><small class="text-muted">Engenheiro: ${req.engineer || 'Não atribuído'}</small></p>
+                    <button class="btn-close delete-btn" onclick="deleteProject('${proj.nome_projeto}')"></button>
+                    <h5 class="card-title">${proj.nome_projeto}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">${proj.disciplina}</h6>
+                    <p class="card-text">${proj.descricao}</p>
+                    <p class="card-text"><small class="text-muted">Engenheiro: ${proj.engineer || 'Não atribuído'}</small></p>
                 </div>
                 <div class="card-footer d-flex justify-content-between">
-                    <small class="text-muted">Status: ${req.status}</small>
-                    <small class="text-muted">${new Date(req.startDate).toLocaleDateString()} - ${new Date(req.endDate).toLocaleDateString()}</small>
+                    <small class="text-muted">Status: ${proj.status}</small>
+                    <small class="text-muted">${new Date(proj.startDate).toLocaleDateString()} - ${new Date(proj.endDate).toLocaleDateString()}</small>
                 </div>
             </div>
         `;
@@ -78,27 +78,27 @@ const renderRequests = (requests = localRequests) => {
     });
 };
 
-const addRequest = (projectName, discipline, description, engineer, startDate, endDate) => {
+const addProject = (projectName, discipline, description, engineer, startDate, endDate) => {
     if (new Date(startDate) >= new Date(endDate)) {
         alert("Erro: A data de fim deve ser posterior à data de início.");
         return;
     }
-    if (localRequests.some(req => req.nome_projeto.toLowerCase() === projectName.toLowerCase())) {
-        alert(`Erro: A requisição "${projectName}" já existe.`);
+    if (localProjects.some(proj => proj.nome_projeto.toLowerCase() === projectName.toLowerCase())) {
+        alert(`Erro: O projeto "${projectName}" já existe.`);
         return;
     }
-    const newRequest = { nome_projeto: projectName, disciplina, description, engineer, startDate, endDate, status: "Aberta" };
-    localRequests.push(newRequest);
-    setLocalData('localRequests', localRequests);
-    alert("Requisição adicionada com sucesso!");
-    renderRequests();
+    const newProject = { nome_projeto: projectName, disciplina, description, engineer, startDate, endDate, status: "Aberta" };
+    localProjects.push(newProject);
+    setLocalData('localProjects', localProjects);
+    alert("Projeto adicionado com sucesso!");
+    renderProjects();
 };
 
-const deleteRequest = (projectName) => {
-    if (confirm(`Tem certeza que deseja remover a requisição "${projectName}"?`)) {
-        localRequests = localRequests.filter(req => req.nome_projeto !== projectName);
-        setLocalData('localRequests', localRequests);
-        renderRequests();
+const deleteProject = (projectName) => {
+    if (confirm(`Tem certeza que deseja remover o projeto "${projectName}"?`)) {
+        localProjects = localProjects.filter(proj => proj.nome_projeto !== projectName);
+        setLocalData('localProjects', localProjects);
+        renderProjects();
     }
 };
 
@@ -106,8 +106,8 @@ const searchRequest = () => {
     const input = document.getElementById('searchInput');
     if (!input) return;
     const searchTerm = input.value.toLowerCase();
-    const filtered = localRequests.filter(req => req.nome_projeto.toLowerCase().includes(searchTerm));
-    renderRequests(filtered);
+    const filtered = localProjects.filter(proj => proj.nome_projeto.toLowerCase().includes(searchTerm));
+    renderProjects(filtered);
 };
 
 /*
@@ -192,7 +192,7 @@ const renderGanttChart = () => {
     timelineHeader.innerHTML = '';
     title.textContent = selectedEngineer ? `Cronograma de ${selectedEngineer}` : 'Cronograma';
 
-    const projects = localRequests.filter(p => p.engineer === selectedEngineer);
+    const projects = localProjects.filter(p => p.engineer === selectedEngineer);
     if (projects.length === 0) {
         chartContainer.innerHTML = `<p class="text-muted p-3">Nenhum projeto encontrado para este engenheiro.</p>`;
         return;
@@ -254,13 +254,13 @@ const initializeApp = () => {
     // Mostra a tela inicial do dashboard
     showView('dashboard-view', 'Dashboard Principal');
 
-    // Configura o formulário de requisições
-    const newRequestForm = document.getElementById('new-request-form');
-    if (newRequestForm) {
-        renderRequests();
-        newRequestForm.addEventListener('submit', function (e) {
+    // Configura o formulário de projetos
+    const newProjectForm = document.getElementById('new-project-form');
+    if (newProjectForm) {
+        renderProjects();
+        newProjectForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            addRequest(
+            addProject(
                 document.getElementById('projectName').value,
                 document.getElementById('discipline').value,
                 document.getElementById('description').value,

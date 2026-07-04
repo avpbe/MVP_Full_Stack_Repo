@@ -1,21 +1,24 @@
 from flask_openapi3 import OpenAPI, Info, Tag
-from flask import redirect
+from flask import redirect, request
 from urllib.parse import unquote
  
 from sqlalchemy.exc import IntegrityError
  
-from models import Session, Requisicao, Base, engine, StatusRequisicao
-from schemas.requisicao import RequisicaoSchema, RequisicaoBuscaSchema, RequisicaoViewSchema, ListagemRequisicoesSchema, apresenta_requisicao, apresenta_requisicoes
-from schemas.error import ErrorSchema
+from models import Session, Projeto, Colaborador, Base, engine
+from schemas import (
+    ProjetoSchema, ProjetoBuscaSchema, ProjetoViewSchema, ListagemProjetosSchema, apresenta_projetos,
+    ColaboradorSchema, ColaboradorBuscaSchema, ListagemColaboradoresSchema, apresenta_colaboradores,
+    ErrorSchema
+)
 from flask_cors import CORS
  
-info = Info(title="MVP - API de Requisições de Engenharia", version="1.0.0")
+info = Info(title="MVP - API de Projetos de Engenharia", version="1.0.0")
 app = OpenAPI(__name__, info=info)
 CORS(app)
  
-# Definição de tags para organização da documentação Swagger
 home_tag = Tag(name="Documentação", description="Seleção de documentação: Swagger, Redoc ou RapiDoc")
-requisicao_tag = Tag(name="Requisição", description="Adição, visualização e remoção de requisições à base")
+projeto_tag = Tag(name="Projeto", description="Adição, visualização e remoção de projetos à base")
+colaborador_tag = Tag(name="Colaborador", description="Adição, visualização e remoção de colaboradores da base")
  
  
 @app.get('/', tags=[home_tag])
@@ -24,96 +27,159 @@ def home():
     """
     return redirect('/openapi')
  
+# Rota para adicionar um novo projeto
+@app.post('/projeto', tags=[projeto_tag],
+          responses={"200": ProjetoViewSchema, "409": ErrorSchema, "400": ErrorSchema})
+def add_projeto(json: ProjetoSchema):
+    """Adiciona um novo Projeto à base de dados
  
-@app.post('/requisicao', tags=[requisicao_tag],
-          responses={"200": RequisicaoViewSchema, "409": ErrorSchema, "400": ErrorSchema})
-def add_requisicao(form: RequisicaoSchema):
-    """Adiciona uma nova Requisição à base de dados
- 
-    Retorna uma representação da requisição inserida.
+    Retorna uma representação do projeto inserido.
     """
-    requisicao = Requisicao(
-        nome_projeto=form.nome_projeto,
-        disciplina=form.disciplina,
-        descricao=form.descricao,
-        status=StatusRequisicao.ABERTA) # Status padrão ao criar
+    session = Session()
+    colaborador = None
+    if json.colaborador_id:
+        colaborador = session.query(Colaborador).filter(Colaborador.id == json.colaborador_id).first()
+        if not colaborador:
+            return {"message": "Colaborador não encontrado."}, 404
+
+    projeto = Projeto(
+        nome_projeto=json.nome_projeto,
+        disciplina=json.disciplina,
+        descricao=json.descricao,
+        data_inicio=json.data_inicio,
+        data_fim=json.data_fim,
+        colaborador_id=json.colaborador_id
+    )
  
     try:
-        session = Session()
-        session.add(requisicao)
+        session.add(projeto)
         session.commit()
-        return apresenta_requisicao(requisicao), 200
+        # Para apresentar o projeto com os dados do colaborador
+        return apresenta_projetos([projeto])['projetos'][0], 200
  
     except IntegrityError as e:
-        error_msg = "Requisição com o mesmo nome de projeto já salva na base."
+        session.rollback()
+        error_msg = "Projeto com o mesmo nome já salvo na base."
         return {"message": error_msg}, 409
  
     except Exception as e:
-        error_msg = "Não foi possível salvar nova requisição."
+        session.rollback()
+        error_msg = "Não foi possível salvar novo projeto."
         return {"message": error_msg}, 400
- 
- 
-@app.get('/requisicoes', tags=[requisicao_tag],
-         responses={"200": ListagemRequisicoesSchema, "404": ErrorSchema})
-def get_requisicoes():
-    """Faz a busca por todas as Requisições cadastradas
- 
-    Retorna uma representação da listagem de requisições.
+    finally:
+        session.close()
+
+# Rota para buscar todos os projetos
+@app.get('/projetos', tags=[projeto_tag],
+         responses={"200": ListagemProjetosSchema, "404": ErrorSchema})
+def get_projetos():
+    """Faz a busca por todos os Projetos cadastrados
     """
     session = Session()
-    requisicoes = session.query(Requisicao).all()
- 
-    if not requisicoes:
-        return {"requisicoes": []}, 200
+    projetos = session.query(Projeto).all()
+    session.close()
+    
+    if not projetos:
+        return {"projetos": []}, 200
     else:
-        return apresenta_requisicoes(requisicoes), 200
+        return apresenta_projetos(projetos), 200
  
- 
-@app.get('/requisicao', tags=[requisicao_tag],
-         responses={"200": RequisicaoViewSchema, "404": ErrorSchema})
-def get_requisicao(query: RequisicaoBuscaSchema):
-    """Faz a busca por uma Requisição a partir do nome do projeto
- 
-    Retorna uma representação da requisição encontrada.
-    """
-    nome_projeto = query.nome_projeto
-    session = Session()
-    requisicao = session.query(Requisicao).filter(Requisicao.nome_projeto == nome_projeto).first()
- 
-    if not requisicao:
-        error_msg = "Requisição não encontrada na base."
-        return {"message": error_msg}, 404
-    else:
-        return apresenta_requisicao(requisicao), 200
- 
- 
-@app.delete('/requisicao', tags=[requisicao_tag],
-            responses={"200": RequisicaoViewSchema, "404": ErrorSchema})
-def del_requisicao(query: RequisicaoBuscaSchema):
-    """Deleta uma Requisição a partir do nome do projeto informado
- 
-    Retorna uma mensagem de confirmação da remoção.
+# Rota para deletar um projeto
+@app.delete('/projeto', tags=[projeto_tag],
+            responses={"200": ProjetoViewSchema, "404": ErrorSchema})
+def del_projeto(query: ProjetoBuscaSchema):
+    """Deleta um Projeto a partir do nome do projeto informado
     """
     nome_projeto = unquote(unquote(query.nome_projeto))
- 
     session = Session()
-    count = session.query(Requisicao).filter(Requisicao.nome_projeto == nome_projeto).delete()
+    count = session.query(Projeto).filter(Projeto.nome_projeto == nome_projeto).delete()
     session.commit()
- 
+    session.close()
+    
     if count:
-        return {"message": "Requisição removida", "id": nome_projeto}
+        return {"message": "Projeto removido", "id": nome_projeto}
     else:
-        error_msg = "Requisição não encontrada na base."
+        error_msg = "Projeto não encontrado na base."
         return {"message": error_msg}, 404
  
- 
-# Se precisar criar o banco de dados e a tabela pela primeira vez
+
+# ======================== ROTAS DE COLABORADOR ========================
+
+@app.post('/colaborador', tags=[colaborador_tag],
+          responses={"200": ColaboradorSchema, "409": ErrorSchema, "400": ErrorSchema})
+def add_colaborador(json: ColaboradorSchema):
+    """Adiciona um novo Colaborador à base de dados
+    """
+    colaborador = Colaborador(
+        nome=json.nome,
+        cargo=json.cargo,
+        disciplina=json.disciplina,
+        atribuicao=json.atribuicao
+    )
+
+    try:
+        session = Session()
+        session.add(colaborador)
+        session.commit()
+        return apresenta_colaboradores([colaborador])['colaboradores'][0], 200
+
+    except IntegrityError:
+        session.rollback()
+        error_msg = "Colaborador com o mesmo nome já salvo na base."
+        return {"message": error_msg}, 409
+
+    except Exception as e:
+        session.rollback()
+        error_msg = "Não foi possível salvar novo colaborador."
+        return {"message": str(e)}, 400
+    finally:
+        session.close()
+
+@app.get('/colaboradores', tags=[colaborador_tag],
+         responses={"200": ListagemColaboradoresSchema, "404": ErrorSchema})
+def get_colaboradores():
+    """Faz a busca por todos os Colaboradores cadastrados
+    """
+    session = Session()
+    colaboradores = session.query(Colaborador).all()
+    session.close()
+
+    if not colaboradores:
+        return {"colaboradores": []}, 200
+    else:
+        return apresenta_colaboradores(colaboradores), 200
+
+@app.delete('/colaborador', tags=[colaborador_tag],
+            responses={"200": dict, "404": ErrorSchema})
+def del_colaborador(query: ColaboradorBuscaSchema):
+    """Deleta um Colaborador a partir do nome informado
+    """
+    nome_colaborador = unquote(unquote(query.nome))
+    session = Session()
+
+    # Verifica se o colaborador está alocado em algum projeto
+    colaborador = session.query(Colaborador).filter(Colaborador.nome == nome_colaborador).first()
+    if colaborador and colaborador.projetos:
+        session.close()
+        return {"message": "Não é possível remover. Colaborador está alocado em um ou mais projetos."}, 400
+
+    count = session.query(Colaborador).filter(Colaborador.nome == nome_colaborador).delete()
+    session.commit()
+    session.close()
+
+    if count:
+        return {"message": "Colaborador removido", "nome": nome_colaborador}
+    else:
+        error_msg = "Colaborador não encontrado na base."
+        return {"message": error_msg}, 404
+
+
 if __name__ == '__main__':
-    # Cria as tabelas do banco de dados, se não existirem
+    # Cria o banco de dados e as tabelas, se não existirem
     Base.metadata.create_all(engine)
     app.run(host='0.0.0.0', port=5000)
 
-```
+'''
 
 ### Próximos Passos
 
@@ -129,3 +195,5 @@ Espero que isso ajude você a começar com o pé direito no seu projeto!
 [PROMPT_SUGGESTION]Como eu adiciono uma rota de atualização (PUT/PATCH) para modificar uma requisição existente?[/PROMPT_SUGGESTION]
 [PROMPT_SUGGESTION]Mostre-me como seria o código JavaScript no frontend para buscar e exibir a lista de todas as requisições cadastradas.[/PROMPT_SUGGESTION]
 -->
+
+'''
