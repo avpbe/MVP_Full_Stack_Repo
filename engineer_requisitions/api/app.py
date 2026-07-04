@@ -2,6 +2,7 @@ from flask_openapi3 import OpenAPI, Info, Tag
 from flask import redirect, request
 from urllib.parse import unquote
  
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
  
 from models import Session, Projeto, Colaborador, Base, engine, StatusProjeto
@@ -55,8 +56,9 @@ def add_projeto(body: ProjetoSchema):
     try:
         session.add(projeto)
         session.commit()
-        # Para apresentar o projeto com os dados do colaborador
-        return apresenta_projetos([projeto])['projetos'][0], 200
+        # Serializa o objeto para o schema de visualização e o converte para um dicionário
+        projeto_apresentado = ProjetoViewSchema.model_validate(projeto)
+        return projeto_apresentado.model_dump(), 200
  
     except IntegrityError as e:
         session.rollback()
@@ -77,7 +79,9 @@ def get_projetos():
     """Faz a busca por todos os Projetos cadastrados
     """
     session = Session()
-    projetos = session.query(Projeto).all()
+    # Realiza o join para carregar os dados do colaborador junto com o projeto (eager loading)
+    # para evitar o DetachedInstanceError ao acessar o relacionamento após fechar a sessão.
+    projetos = session.query(Projeto).options(joinedload(Projeto.colaborador)).all()
     session.close()
     
     if not projetos:

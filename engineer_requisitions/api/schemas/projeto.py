@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 from models import StatusProjeto
@@ -20,6 +20,8 @@ class ProjetoBuscaSchema(BaseModel):
 
 class ProjetoViewSchema(BaseModel):
     """ Define como um projeto será retornado, incluindo o colaborador. """
+    model_config = ConfigDict(from_attributes=True)
+
     id: int = 1
     nome_projeto: str = "Projeto Alfa"
     disciplina: str = "Instalação"
@@ -34,20 +36,9 @@ class ListagemProjetosSchema(BaseModel):
     projetos: List[ProjetoViewSchema]
 
 def apresenta_projetos(projetos: List[any]):
-    """ Retorna uma representação do projeto seguindo o schema definido. """
     """ Retorna uma representação do projeto seguindo o schema definido em ProjetoViewSchema. """
     result = []
     for proj in projetos:
-        result.append({
-            "id": proj.id,
-            "nome_projeto": proj.nome_projeto,
-            "disciplina": proj.disciplina,
-            "descricao": proj.descricao,
-            "status": proj.status,
-            "data_inicio": proj.data_inicio,
-            "data_fim": proj.data_fim,
-            "colaborador": proj.colaborador,
-        })
-        # Utiliza o ProjetoViewSchema para serializar o objeto Projeto do SQLAlchemy
-        result.append(ProjetoViewSchema.model_validate(proj))
+        # Serializa o objeto e o converte para um dicionário JSON compatível
+        result.append(ProjetoViewSchema.model_validate(proj).model_dump())
     return {"projetos": result}

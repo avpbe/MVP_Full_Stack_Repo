@@ -35,10 +35,11 @@ const getProjetos = async () => {
         }
         const data = await response.json();
         const projectsList = document.getElementById('projects-list'); // Supondo que você tenha um elemento com este ID no seu HTML
-        if (projectsList) {
-            projectsList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
-            data.projetos.forEach(addProjetoToCard);
-        }
+        if (!projectsList) return;
+
+        projectsList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
+        // Itera sobre a lista de projetos retornada pela API e cria um card para cada um
+        data.projetos.forEach(addProjetoToCard);
     } catch (error) {
         console.error('Erro ao buscar projetos:', error);
         alert('Erro ao buscar projetos. Verifique o console para mais detalhes.');

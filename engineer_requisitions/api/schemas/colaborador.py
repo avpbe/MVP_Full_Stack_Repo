@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List
 from models import AtribuicaoColaborador, CargoColaborador, Colaborador
 
@@ -15,6 +15,8 @@ class ColaboradorBuscaSchema(BaseModel):
 
 class ColaboradorViewSchema(BaseModel):
     """ Define como um colaborador será retornado """
+    model_config = ConfigDict(from_attributes=True)
+
     id: int = 1
     nome: str = "João da Silva"
     cargo: CargoColaborador = CargoColaborador.SENIOR
@@ -38,11 +40,6 @@ def apresenta_colaboradores(colaboradores: List[Colaborador]):
     """
     result = []
     for colab in colaboradores:
-        result.append({
-            "id": colab.id,
-            "nome": colab.nome,
-            "cargo": colab.cargo,
-            "disciplina": colab.disciplina,
-            "atribuicao": colab.atribuicao,
-        })
+        # Serializa o objeto e o converte para um dicionário JSON compatível
+        result.append(ColaboradorViewSchema.model_validate(colab).model_dump())
     return {"colaboradores": result}
