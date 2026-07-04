@@ -171,6 +171,86 @@
 
     </main>
 
+    <!-- MODAL DE EDIÇÃO DE PROJETO -->
+    <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editProjectModalLabel">Editar Projeto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-project-form">
+                        <!-- Campo oculto para armazenar o nome original do projeto -->
+                        <input type="hidden" id="editProjectOriginalName" name="originalName">
+
+                        <div class="mb-3">
+                            <label for="editProjectName" class="form-label">Nome do Projeto</label>
+                            <input type="text" class="form-control" id="editProjectName" name="nome_projeto" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editProjectDescription" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="editProjectDescription" name="descricao" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editProjectStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editProjectStatus" name="status"></select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editProjectEngineer" class="form-label">Engenheiro Responsável</label>
+                                <select class="form-select" id="editProjectEngineer" name="colaborador_id"></select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="submitProjectEdit()">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE COLABORADOR -->
+    <div class="modal fade" id="editColaboradorModal" tabindex="-1" aria-labelledby="editColaboradorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editColaboradorModalLabel">Editar Colaborador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-colaborador-form">
+                        <input type="hidden" id="editColaboradorOriginalName" name="originalName">
+                        <div class="mb-3">
+                            <label for="editColaboradorName" class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="editColaboradorName" name="nome" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editColaboradorRole" class="form-label">Cargo</label>
+                                <select class="form-select" id="editColaboradorRole" name="cargo"></select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editColaboradorDiscipline" class="form-label">Disciplina</label>
+                                <input type="text" class="form-control" id="editColaboradorDiscipline" name="disciplina" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editColaboradorPlatformRole" class="form-label">Atribuição na Plataforma</label>
+                            <select class="form-select" id="editColaboradorPlatformRole" name="atribuicao"></select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="submitColaboradorEdit()">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/scripts_api.js"></script>
 </body>

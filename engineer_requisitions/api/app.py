@@ -7,8 +7,8 @@ from sqlalchemy.exc import IntegrityError
  
 from models import Session, Projeto, Colaborador, Base, engine, StatusProjeto
 from schemas import (
-    ProjetoSchema, ProjetoBuscaSchema, ProjetoViewSchema, ListagemProjetosSchema, apresenta_projetos,
-    ColaboradorSchema, ColaboradorBuscaSchema, ColaboradorDelSchema, ListagemColaboradoresSchema, apresenta_colaboradores,
+    ProjetoSchema, ProjetoBuscaSchema, ProjetoUpdateSchema, ProjetoViewSchema, ListagemProjetosSchema, apresenta_projetos,
+    ColaboradorSchema, ColaboradorBuscaSchema, ColaboradorUpdateSchema, ColaboradorDelSchema, ColaboradorViewSchema, ListagemColaboradoresSchema, apresenta_colaboradores,
     ErrorSchema
 )
 from flask_cors import CORS
@@ -89,6 +89,42 @@ def get_projetos():
     else:
         return apresenta_projetos(projetos), 200
  
+# Rota para atualizar um projeto
+@app.put('/projeto', tags=[projeto_tag],
+         responses={"200": ProjetoViewSchema, "404": ErrorSchema, "400": ErrorSchema})
+def update_projeto(query: ProjetoBuscaSchema, body: ProjetoUpdateSchema):
+    """Atualiza um Projeto existente a partir do nome do projeto informado.
+    """
+    session = Session()
+    # Carrega o projeto e o colaborador relacionado para evitar DetachedInstanceError
+    projeto = session.query(Projeto).options(joinedload(Projeto.colaborador)).filter(Projeto.nome_projeto == query.nome_projeto).first()
+
+    if not projeto:
+        session.close()
+        return {"message": "Projeto não encontrado."}, 404
+
+    # Atualiza os campos do projeto se eles foram fornecidos no corpo da requisição
+    # O método `dict(exclude_unset=True)` do Pydantic é perfeito para isso
+    update_data = body.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(projeto, key, value)
+
+    try:
+        session.commit()
+        # Retorna a representação atualizada do projeto
+        return ProjetoViewSchema.model_validate(projeto).model_dump(), 200
+    except IntegrityError as e:
+        session.rollback()
+        # Se o novo nome do projeto já existir
+        return {"message": "Já existe um projeto com este novo nome."}, 409
+    except Exception as e:
+        session.rollback()
+        error_msg = "Não foi possível atualizar o projeto."
+        return {"message": error_msg}, 400
+    finally:
+        session.close()
+
+
 # Rota para deletar um projeto
 @app.delete('/projeto', tags=[projeto_tag],
             responses={"200": ProjetoViewSchema, "404": ErrorSchema})
@@ -153,6 +189,38 @@ def get_colaboradores():
         return {"colaboradores": []}, 200
     else:
         return apresenta_colaboradores(colaboradores), 200
+
+@app.put('/colaborador', tags=[colaborador_tag],
+            responses={"200": ColaboradorViewSchema, "404": ErrorSchema, "400": ErrorSchema, "409": ErrorSchema})
+def update_colaborador(query: ColaboradorBuscaSchema, body: ColaboradorUpdateSchema):
+    """Atualiza um Colaborador existente a partir do nome informado.
+    """
+    session = Session()
+    colaborador = session.query(Colaborador).filter(Colaborador.nome == query.nome).first()
+
+    if not colaborador:
+        session.close()
+        return {"message": "Colaborador não encontrado."}, 404
+
+    # Atualiza os campos do colaborador se eles foram fornecidos no corpo da requisição
+    update_data = body.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(colaborador, key, value)
+
+    try:
+        session.commit()
+        # Retorna a representação atualizada do colaborador
+        return ColaboradorViewSchema.model_validate(colaborador).model_dump(), 200
+    except IntegrityError:
+        session.rollback()
+        return {"message": "Já existe um colaborador com este novo nome."}, 409
+    except Exception as e:
+        session.rollback()
+        error_msg = "Não foi possível atualizar o colaborador."
+        return {"message": error_msg}, 400
+    finally:
+        session.close()
+
 
 @app.delete('/colaborador', tags=[colaborador_tag],
             responses={"200": ColaboradorDelSchema, "404": ErrorSchema, "400": ErrorSchema})

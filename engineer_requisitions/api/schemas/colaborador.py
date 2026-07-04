@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import List
+from typing import List, Optional
 from models import AtribuicaoColaborador, CargoColaborador, Colaborador
 
 class ColaboradorSchema(BaseModel):
@@ -12,6 +12,13 @@ class ColaboradorSchema(BaseModel):
 class ColaboradorBuscaSchema(BaseModel):
     """ Define como deve ser a estrutura que representa a busca por nome. """
     nome: str = "João da Silva"
+
+class ColaboradorUpdateSchema(BaseModel):
+    """ Define como um colaborador pode ser atualizado. Todos os campos são opcionais. """
+    nome: Optional[str] = None
+    cargo: Optional[CargoColaborador] = None
+    disciplina: Optional[str] = None
+    atribuicao: Optional[AtribuicaoColaborador] = None
 
 class ColaboradorViewSchema(BaseModel):
     """ Define como um colaborador será retornado """

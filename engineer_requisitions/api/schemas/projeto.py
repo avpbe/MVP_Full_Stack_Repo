@@ -18,6 +18,16 @@ class ProjetoBuscaSchema(BaseModel):
     """ Define como deve ser a estrutura que representa a busca por nome do projeto. """
     nome_projeto: str = "Projeto Alfa"
 
+class ProjetoUpdateSchema(BaseModel):
+    """ Define como um projeto pode ser atualizado. Todos os campos são opcionais. """
+    nome_projeto: Optional[str] = None
+    disciplina: Optional[str] = None
+    descricao: Optional[str] = None
+    status: Optional[StatusProjeto] = None
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
+    colaborador_id: Optional[int] = None
+
 class ProjetoViewSchema(BaseModel):
     """ Define como um projeto será retornado, incluindo o colaborador. """
     model_config = ConfigDict(from_attributes=True)

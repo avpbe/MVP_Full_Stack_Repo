@@ -59,7 +59,14 @@ const addProjetoToCard = (projeto) => {
     cardCol.innerHTML = `
         <div class="card h-100">
             <div class="card-body">
-                <button class="btn-close position-absolute top-0 end-0 p-2" onclick="deleteProjeto('${projeto.nome_projeto}')" title="Remover projeto"></button>
+                <div class="position-absolute top-0 end-0 p-2">
+                    <button class="btn btn-sm" onclick='openEditModal(${JSON.stringify(projeto)})' title="Editar projeto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/></svg>
+                    </button>
+                    <button class="btn btn-sm" onclick="deleteProjeto('${projeto.nome_projeto}')" title="Remover projeto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-square" viewBox="0 0 16 16"><path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/></svg>
+                    </button>
+                </div>
                 <h5 class="card-title">${projeto.nome_projeto}</h5>
                 <h6 class="card-subtitle mb-2 text-muted">${projeto.disciplina}</h6>
                 <p class="card-text">${projeto.descricao}</p>
@@ -146,6 +153,79 @@ const deleteProjeto = async (nomeProjeto) => {
     }
 };
 
+/**
+ * Abre o modal de edição e preenche com os dados do projeto.
+ * @param {object} projeto - O objeto do projeto a ser editado.
+ */
+const openEditModal = (projeto) => {
+    // Preenche os campos do formulário no modal
+    document.getElementById('editProjectOriginalName').value = projeto.nome_projeto;
+    document.getElementById('editProjectName').value = projeto.nome_projeto;
+    document.getElementById('editProjectDescription').value = projeto.descricao;
+
+    // Popula e seleciona o status
+    const statusSelect = document.getElementById('editProjectStatus');
+    statusSelect.innerHTML = ''; // Limpa opções antigas
+    ['Aberto', 'Em Andamento', 'Concluído', 'Cancelado'].forEach(status => {
+        const option = new Option(`Status: ${status}`, status);
+        if (status === projeto.status) {
+            option.selected = true;
+        }
+        statusSelect.add(option);
+    });
+
+    // Popula e seleciona o engenheiro
+    const engineerSelect = document.getElementById('editProjectEngineer');
+    const projectEngineerOptions = document.getElementById('projectEngineer').innerHTML; // Pega opções já carregadas
+    engineerSelect.innerHTML = projectEngineerOptions;
+    if (projeto.colaborador) {
+        engineerSelect.value = projeto.colaborador.id;
+    } else {
+        engineerSelect.value = ""; // Seleciona "Atribuir a um engenheiro..."
+    }
+
+    // Abre o modal
+    const modal = new bootstrap.Modal(document.getElementById('editProjectModal'));
+    modal.show();
+};
+
+/**
+ * Submete o formulário de edição do projeto.
+ */
+const submitProjectEdit = async () => {
+    const form = document.getElementById('edit-project-form');
+    const originalName = form.originalName.value;
+
+    const body = {
+        nome_projeto: form.nome_projeto.value,
+        descricao: form.descricao.value,
+        status: form.status.value,
+        colaborador_id: parseInt(form.colaborador_id.value) || null
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/projeto?nome_projeto=${encodeURIComponent(originalName)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+            alert("Projeto atualizado com sucesso!");
+            getProjetos(); // Atualiza a lista de projetos
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editProjectModal'));
+            modal.hide();
+        } else {
+            const errorData = await response.json();
+            alert(`Erro ao atualizar projeto: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert("Ocorreu um erro ao tentar atualizar o projeto.");
+    }
+};
+
+
 /*
   ======================================================================================
   Funções para interagir com a API de COLABORADORES
@@ -206,7 +286,13 @@ const renderColaboradores = (colaboradores) => {
                 <h6 class="mb-0">${colab.nome}</h6>
                 <small class="text-muted">${colab.cargo} - ${colab.disciplina}</small>
             </div>
-            <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteColaborador('${colab.nome}')" title="Remover Colaborador">&times;</button>
+            <div>
+                ${atribuicaoBadge}
+                <button class="btn btn-sm btn-outline-primary ms-2" onclick='openEditColaboradorModal(${JSON.stringify(colab)})' title="Editar Colaborador">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg>
+                </button>
+                <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteColaborador('${colab.nome}')" title="Remover Colaborador">&times;</button>
+            </div>
         `;
         engineersList.appendChild(item);
     });
@@ -270,6 +356,74 @@ const deleteColaborador = async (nomeColaborador) => {
         }
     }
 };
+
+/**
+ * Abre o modal de edição de colaborador e preenche com os dados.
+ * @param {object} colaborador - O objeto do colaborador a ser editado.
+ */
+const openEditColaboradorModal = (colaborador) => {
+    document.getElementById('editColaboradorOriginalName').value = colaborador.nome;
+    document.getElementById('editColaboradorName').value = colaborador.nome;
+    document.getElementById('editColaboradorDiscipline').value = colaborador.disciplina;
+
+    // Popula e seleciona o cargo
+    const roleSelect = document.getElementById('editColaboradorRole');
+    roleSelect.innerHTML = '';
+    ['Engenheiro Junior', 'Engenheiro Pleno', 'Engenheiro Senior'].forEach(role => {
+        const option = new Option(role, role);
+        if (role === colaborador.cargo) option.selected = true;
+        roleSelect.add(option);
+    });
+
+    // Popula e seleciona a atribuição
+    const platformRoleSelect = document.getElementById('editColaboradorPlatformRole');
+    platformRoleSelect.innerHTML = '';
+    ['Elaborador', 'Revisor', 'Aprovador'].forEach(role => {
+        const option = new Option(role, role);
+        if (role === colaborador.atribuicao) option.selected = true;
+        platformRoleSelect.add(option);
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById('editColaboradorModal'));
+    modal.show();
+};
+
+/**
+ * Submete o formulário de edição do colaborador.
+ */
+const submitColaboradorEdit = async () => {
+    const form = document.getElementById('edit-colaborador-form');
+    const originalName = form.originalName.value;
+
+    const body = {
+        nome: form.nome.value,
+        cargo: form.cargo.value,
+        disciplina: form.disciplina.value,
+        atribuicao: form.atribuicao.value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/colaborador?nome=${encodeURIComponent(originalName)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+            alert("Colaborador atualizado com sucesso!");
+            getColaboradores(); // Atualiza a lista de colaboradores
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editColaboradorModal'));
+            modal.hide();
+        } else {
+            const errorData = await response.json();
+            alert(`Erro ao atualizar colaborador: ${errorData.message}`);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert("Ocorreu um erro ao tentar atualizar o colaborador.");
+    }
+};
+
 
 /*
   ======================================================================================
