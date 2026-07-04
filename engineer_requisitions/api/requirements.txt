@@ -1,11 +1,7 @@
-Flask
 Flask-Cors
-flask-openapi3
-Flask-SQLAlchemy
+Flask-SQLAlchemy # Já inclui Flask e SQLAlchemy
 nose2
 pydantic
-SQLAlchemy
 SQLAlchemy-Utils
-typing_extensions
 werkzeug==2.3.8
-flask-openapi3[swagger]
+flask-openapi3[swagger] # Já inclui flask-openapi3 e suas dependências

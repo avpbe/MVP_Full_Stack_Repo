@@ -79,16 +79,36 @@ def get_projetos():
     """Faz a busca por todos os Projetos cadastrados
     """
     session = Session()
-    # Realiza o join para carregar os dados do colaborador junto com o projeto (eager loading)
-    # para evitar o DetachedInstanceError ao acessar o relacionamento após fechar a sessão.
-    projetos = session.query(Projeto).options(joinedload(Projeto.colaborador)).all()
-    session.close()
-    
-    if not projetos:
-        return {"projetos": []}, 200
-    else:
+    try:
+        # Realiza o join para carregar os dados do colaborador junto com o projeto (eager loading)
+        # para evitar o DetachedInstanceError ao acessar o relacionamento após fechar a sessão.
+        projetos = session.query(Projeto).options(joinedload(Projeto.colaborador)).all()
+        
+        if not projetos:
+            return {"projetos": []}, 200
+        else:
+            return apresenta_projetos(projetos), 200
+    finally:
+        session.close()
+
+# Rota para buscar projetos por nome
+@app.get('/projetos/busca', tags=[projeto_tag],
+         responses={"200": ListagemProjetosSchema, "404": ErrorSchema})
+def search_projetos(query: ProjetoBuscaSchema):
+    """Faz a busca por Projetos a partir de um termo pesquisado no nome.
+    """
+    termo_busca = query.nome_projeto
+    session = Session()
+    try:
+        # Filtra projetos usando 'ilike' para busca case-insensitive e parcial
+        query_result = session.query(Projeto).options(joinedload(Projeto.colaborador)).filter(Projeto.nome_projeto.ilike(f'%{termo_busca}%'))
+        projetos = query_result.all()
+        
         return apresenta_projetos(projetos), 200
- 
+    finally:
+        session.close()
+
+
 # Rota para atualizar um projeto
 @app.put('/projeto', tags=[projeto_tag],
          responses={"200": ProjetoViewSchema, "404": ErrorSchema, "400": ErrorSchema})

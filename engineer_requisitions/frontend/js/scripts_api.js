@@ -1,4 +1,5 @@
 const API_URL = 'http://127.0.0.1:5000';
+let debounceTimer; // Variável para controlar o timer do debounce
 
 /*
   ======================================================================================
@@ -33,17 +34,45 @@ const getProjetos = async () => {
         if (!response.ok) {
             throw new Error("Não foi possível carregar os projetos.");
         }
-        const data = await response.json();
-        const projectsList = document.getElementById('projects-list'); // Supondo que você tenha um elemento com este ID no seu HTML
-        if (!projectsList) return;
-
-        projectsList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
-        // Itera sobre a lista de projetos retornada pela API e cria um card para cada um
-        data.projetos.forEach(addProjetoToCard);
+        const { projetos } = await response.json();
+        renderProjetos(projetos);
     } catch (error) {
         console.error('Erro ao buscar projetos:', error);
         alert('Erro ao buscar projetos. Verifique o console para mais detalhes.');
     }
+};
+
+/**
+ * Busca projetos na API com base em um termo de pesquisa e os exibe na tela.
+ * @param {string} searchTerm - O termo para filtrar projetos por nome.
+ */
+const searchProjetos = async (searchTerm) => {
+    // Se a busca estiver vazia, carrega todos os projetos
+    if (!searchTerm.trim()) {
+        getProjetos();
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/projetos/busca?nome_projeto=${encodeURIComponent(searchTerm)}`);
+        if (!response.ok) throw new Error("Erro na busca de projetos.");
+        const { projetos } = await response.json();
+        renderProjetos(projetos);
+    } catch (error) {
+        console.error('Erro ao buscar projetos:', error);
+    }
+};
+
+/**
+ * Renderiza uma lista de projetos na interface.
+ * @param {Array<object>} projetos - A lista de projetos a ser renderizada.
+ */
+const renderProjetos = (projetos) => {
+    const projectsList = document.getElementById('projects-list');
+    if (!projectsList) return;
+
+    projectsList.innerHTML = ''; // Limpa a lista antes de adicionar os novos itens
+    projetos.forEach(addProjetoToCard);
 };
 
 /**
@@ -444,4 +473,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const newEngineerForm = document.getElementById('new-engineer-form');
     if (newEngineerForm) newEngineerForm.addEventListener('submit', postColaborador);
+
+    // Adiciona listener para a barra de busca de projetos
+    const searchInput = document.getElementById('project-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            // Limpa o timer anterior para reiniciar a contagem
+            clearTimeout(debounceTimer);
+            // Define um novo timer para executar a busca após 300ms
+            debounceTimer = setTimeout(() => {
+                searchProjetos(e.target.value);
+            }, 300);
+        });
+    }
 });

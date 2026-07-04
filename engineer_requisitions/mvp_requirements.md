@@ -49,6 +49,7 @@ configuração no navegador ou outras dependências adicionais. O não
 cumprimento deste requisito resultará em uma penalização de 2 pontos na nota
 final.
 
+Organização do código:
 Devem ser criados dois projetos separados: um para a API e outro para o front-end.
 Cada projeto deve estar em um repositório git próprio.
 0,5 Em ambos os repositórios deve existir um arquivo README.md contendo as seguintes
