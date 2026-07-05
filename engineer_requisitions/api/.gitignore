@@ -8,10 +8,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Banco de dados
-database/
-*.db
-*.sqlite3
+# # Banco de dados
+# database/
+# *.db
+# *.sqlite3
 
 # Arquivos de configuração de IDEs
 .vscode/
