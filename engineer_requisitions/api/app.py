@@ -125,7 +125,7 @@ def update_projeto(query: ProjetoBuscaSchema, body: ProjetoUpdateSchema):
 
     # Atualiza os campos do projeto se eles foram fornecidos no corpo da requisição
     # O método `dict(exclude_unset=True)` do Pydantic é perfeito para isso
-    update_data = body.model_dump(exclude_unset=True)
+    update_data = body.model_dump(exclude_unset=True, exclude_none=True)
     for key, value in update_data.items():
         setattr(projeto, key, value)
 

@@ -40,18 +40,18 @@ source env/bin/activate
 
 ### 2. Instalação das Dependências
 
-Com o ambiente virtual ativado, instale as bibliotecas necessárias a partir do arquivo `requirements.txt` (que deve ser criado na raiz da API).
+Com o ambiente virtual ativado, instale as bibliotecas necessárias a partir do arquivo `requirements.txt`.
 
 ```bash
-(env)$ pip install flask-openapi3 sqlalchemy pydantic flask-cors
+(env)$ pip install -r requirements.txt
 ```
 
 ### 3. Execução da API
 
-Para iniciar o servidor, execute o arquivo `app.py`. Na primeira vez, ele criará automaticamente o banco de dados `requisicoes.db`.
+Para iniciar o servidor de desenvolvimento, use o comando `flask run`. Na primeira vez que a API for executada, o arquivo de banco de dados `requisicoes.db` será criado automaticamente.
 
 ```bash
-(env)$ python app.py
+(env)$ flask run --host 0.0.0.0 --port 5000
 ```
 
 O servidor estará rodando em `http://127.0.0.1:5000`.
